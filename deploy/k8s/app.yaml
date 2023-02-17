@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fm-environments-simulation-api-deployment
+  labels:
+    app: fm-environments-simulation-api
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fm-environments-simulation-api
+  template:
+    metadata:
+      labels:
+        app: fm-environments-simulation-api
+    spec:
+      containers:
+      - name: fm-environments-simulation-api
+        image: kuzyacat/fm-environments-simulation-api
+        ports:
+        - containerPort: 3005
+        env:
+        - name: DB_NAME
+          valueFrom:
+            secretKeyRef:
+              name: postgres-secret
+              key: postgres-user
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: postres-secret
+              key: postgres-password 
+        - name: DB_URL
+          valueFrom:
+            configMapKeyRef:
+              name: postgres-config
+              key: postgres-url
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: fm-environments-simulation-service
+spec:
+  type: NodePort
+  selector:
+    app: fm-environments-simulation
+  ports:
+    - protocol: TCP
+      port: 3005
+      targetPort: 3005
+      nodePort: 30105
